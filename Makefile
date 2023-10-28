@@ -1,0 +1,26 @@
+CC = g++
+CFLAGS = -Wall -Wextra -std=c++11
+LDFLAGS = -lsqlite3
+
+CLIENT_SRCS = client.cpp sqlite.cpp
+SERVER_SRCS = server.cpp
+CLIENT_OBJS = $(CLIENT_SRCS:.cpp=.o)
+SERVER_OBJS = $(SERVER_SRCS:.cpp=.o)
+CLIENT_EXECUTABLE = client
+SERVER_EXECUTABLE = server
+
+.PHONY: all clean
+
+all: $(CLIENT_EXECUTABLE) $(SERVER_EXECUTABLE)
+
+$(CLIENT_EXECUTABLE): $(CLIENT_OBJS)
+	$(CC) $(CFLAGS) $(CLIENT_OBJS) -o $(CLIENT_EXECUTABLE) $(LDFLAGS)
+
+$(SERVER_EXECUTABLE): $(SERVER_OBJS)
+	$(CC) $(CFLAGS) $(SERVER_OBJS) -o $(SERVER_EXECUTABLE)
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(CLIENT_EXECUTABLE) $(SERVER_EXECUTABLE) $(CLIENT_OBJS) $(SERVER_OBJS) chat_room.db
