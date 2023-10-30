@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-10-22 13:17:39
  * @author: lidonghang-02 2426971102@qq.com
- * @LastEditTime: 2023-10-28 17:26:56
+ * @LastEditTime: 2023-10-30 17:50:38
  */
 #include <iostream>
 #include <fcntl.h>
@@ -80,14 +80,43 @@ stp1:
 	}
 
 stp2:
-	cout << "1.添加好友	2.群聊 3.私聊 4.退出" << endl;
+	cout << "----------------------------" << endl;
+	cout << "1.添加好友 2.群聊 3.私聊 4.退出" << endl;
+	cout << "----------------------------" << endl;
+
 	cin >> opt;
 	getchar();
 	switch (opt)
 	{
 	case 1:
-		add_friend(UID);
+		printf("Please enter your friend's ID:");
+		cin >> FID;
+		if (FID == UID)
+		{
+			printf("The %d is yourself.\n", FID);
+			goto stp2;
+		}
+		ret = check_user_exists(FID);
+		if (ret == 0)
+		{
+			cout << "user[" << FID << "] does not exist" << endl;
+			goto stp2;
+		}
+		MSG msg;
+		msg.UID = UID;
+		msg.FID = FID;
+		msg.opcode = Add_Friend;
+		strcpy(msg.name, username);
+		if (send(sockfd, &msg, sizeof(msg), 0) == -1)
+		{
+			printf("send Friend verification error\n");
+		}
+
+		if (add_friend(UID, FID) != -1)
+		{
+		}
 		goto stp2;
+
 		break;
 	case 2:
 		printf("------public chat------\n");
@@ -97,11 +126,27 @@ stp2:
 	case 3:
 		cout << "Please enter your firend's UID" << endl;
 		cin >> FID;
+		if (FID == UID)
+		{
+			printf("The %d is yourself.\n", FID);
+			goto stp2;
+		}
+		if (is_friend(UID, FID) != 0)
+		{
+			goto stp2;
+		}
+		ret = get_friend_state(FID);
+		if (ret == NOT_ONLINE)
+		{
+			cout << "Your friend is not online" << endl;
+			goto stp2;
+		}
 		printf("------private chat with %d------\n", FID);
 		chat(sockfd, Private_Chat, username, FID);
 		goto stp2;
 		break;
 	case 4:
+		user_quit(UID);
 		break;
 	default:
 		cout << "Please enter the correct opcode" << endl;
@@ -186,6 +231,18 @@ void chat(int sockfd, int opcode, char *name, int FID)
 			memset(msg_recv.buf, '\0', BUFFER_SIZE);
 			recv(fds[1].fd, &msg_recv, sizeof(msg_recv), 0);
 			cout << msg_recv.buf << endl;
+			if (msg_recv.opcode == Add_Friend)
+			{
+				int opt;
+				cout << "1.同意		2.拒绝" << endl;
+				while (cin >> opt)
+				{
+					if (opt == 1)
+					{
+						break;
+					}
+				}
+			}
 		}
 
 		if (fds[0].revents & POLLIN)
