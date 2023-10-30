@@ -1,26 +1,32 @@
-CC = g++
-CFLAGS = -Wall -Wextra -std=c++11
-LDFLAGS = -lsqlite3
+CC := g++  # 编译器
+CFLAGS := -std=c++11 -Wall -Wextra  # 编译选项
+LDFLAGS := -lsqlite3  # 链接选项
 
-CLIENT_SRCS = client.cpp sqlite.cpp
-SERVER_SRCS = server.cpp
-CLIENT_OBJS = $(CLIENT_SRCS:.cpp=.o)
-SERVER_OBJS = $(SERVER_SRCS:.cpp=.o)
-CLIENT_EXECUTABLE = client
-SERVER_EXECUTABLE = server
+# 目标文件
+SERVER_OBJ := server.o sqlite.o
+CLIENT_OBJ := client.o sqlite.o
 
-.PHONY: all clean
+# 默认目标
+all: server client
 
-all: $(CLIENT_EXECUTABLE) $(SERVER_EXECUTABLE)
+# 服务器端目标
+server: $(SERVER_OBJ)
+	$(CC) $(CFLAGS) $(SERVER_OBJ) -o server $(LDFLAGS)
 
-$(CLIENT_EXECUTABLE): $(CLIENT_OBJS)
-	$(CC) $(CFLAGS) $(CLIENT_OBJS) -o $(CLIENT_EXECUTABLE) $(LDFLAGS)
+# 客户端目标
+client: $(CLIENT_OBJ)
+	$(CC) $(CFLAGS) $(CLIENT_OBJ) -o client $(LDFLAGS)
 
-$(SERVER_EXECUTABLE): $(SERVER_OBJS)
-	$(CC) $(CFLAGS) $(SERVER_OBJS) -o $(SERVER_EXECUTABLE)
+# 依赖关系
+server.o: server.cpp chat_room.h
+	$(CC) $(CFLAGS) -c server.cpp
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+client.o: client.cpp chat_room.h
+	$(CC) $(CFLAGS) -c client.cpp
 
+sqlite.o: sqlite.cpp chat_room.h
+	$(CC) $(CFLAGS) -c sqlite.cpp
+
+# 清理目标文件和可执行文件
 clean:
-	rm -f $(CLIENT_EXECUTABLE) $(SERVER_EXECUTABLE) $(CLIENT_OBJS) $(SERVER_OBJS) chat_room.db
+	rm -f server client $(SERVER_OBJ) $(CLIENT_OBJ) chat_room.db

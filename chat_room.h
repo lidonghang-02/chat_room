@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-10-15 20:11:50
  * @author: lidonghang-02 2426971102@qq.com
- * @LastEditTime: 2023-10-28 14:55:03
+ * @LastEditTime: 2023-10-30 17:45:56
  */
 #ifndef CHAT_ROOM_H
 #define CHAT_ROOM_H
@@ -12,6 +12,10 @@
 #define Private_Chat 1
 #define Public_Chat 2
 #define LOGIN 3
+#define Add_Friend 4
+
+#define ONLINE 1
+#define NOT_ONLINE 2
 
 typedef struct
 {
@@ -27,8 +31,11 @@ typedef struct
 
 int Init_SQL();                       // 数据库初始化
 int create_user(char *name, int &id); // 注册
-int add_friend(int id);               // 添加好友
+int add_friend(int UID, int FID);     // 添加好友
 int login(char *name, int &id);       // 登陆
-int pri_chat_sql(int UID, int FID);   // 私聊
+int user_quit(int UID);
+int is_friend(int UID, int FID); // 私聊
+int get_friend_state(int UID);
+int check_user_exists(int id);
 
 #endif /* CHAT_ROOM_HH */

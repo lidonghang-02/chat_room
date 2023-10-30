@@ -1,3 +1,8 @@
+/*
+ * @Date: 2023-10-24 10:03:02
+ * @author: lidonghang-02 2426971102@qq.com
+ * @LastEditTime: 2023-10-30 17:53:17
+ */
 #include <iostream>
 #include <netinet/in.h>
 #include <poll.h>
@@ -7,16 +12,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include "chat_room.h"
-
 using namespace std;
-
-// 客户数据
-struct client_data
-{
-    sockaddr_in address;   // 客户端地址
-    char *write_buf;       // 待写到客户端的数据的位置
-    char buf[BUFFER_SIZE]; // 从客户端读入的数据
-};
 
 int main(int argc, char *argv[])
 {
@@ -127,11 +123,13 @@ int main(int argc, char *argv[])
                 int connfd = fds[i].fd;
                 ret = recv(connfd, &msg, sizeof(msg), 0);
                 // 更新状态
-                if (user[connfd].opcode == LOGIN)
-                {
-                    user[connfd].opcode = msg.opcode;
-                    continue;
-                }
+                // if (user[connfd].opcode == LOGIN)
+                // {
+                // user[connfd].UID = msg.UID;
+                // strcpy(user[connfd].name, msg.name);
+                user[connfd].opcode = msg.opcode;
+                // continue;
+                // }
                 if (ret < 0) // 如果读出错，关闭连接
                 {
                     if (errno != EAGAIN)
@@ -150,18 +148,6 @@ int main(int argc, char *argv[])
                     {
 
                         printf("uer[%s](%d) left\n", user[connfd].name, user[connfd].UID);
-                        // for (int j = 1; j <= user_counter; ++j)
-                        // {
-                        //     if (fds[j].fd == connfd) // 当前的连接socket不处理
-                        //     {
-                        //         continue;
-                        //     }
-                        //     fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
-                        //     fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
-                        //     // memset(user[fds[j].fd].buf, '\0', BUFFER_SIZE);
-                        //     int len = snprintf(NULL, 0, "----%s(%d)下线----", msg.name, msg.UID);
-                        //     snprintf(user[fds[j].fd].buf, len + 1, "----%s(%d)下线----", msg.name, msg.UID);
-                        // }
                         // 关闭连接
                         close(connfd);
                         user[connfd] = {};
@@ -171,44 +157,83 @@ int main(int argc, char *argv[])
                     }
                     else // 接收到客户数据，通知其他socket连接准备写数据
                     {
+                        int len;
                         char buf_temp[64];
                         memset(buf_temp, '\0', 64);
-                        // 登陆，存储用户的UID和name
-                        if (msg.opcode == LOGIN)
+                        if (msg.opcode == Private_Chat)
                         {
-                            user[connfd].UID = msg.UID;
-                            strcpy(user[connfd].name, msg.name);
-                            user[connfd].opcode = msg.opcode;
-                            int len = snprintf(NULL, 0, "----%s(%d)上线----", msg.name, msg.UID);
-                            snprintf(buf_temp, len + 1, "----%s(%d)上线----", msg.name, msg.UID);
+                            len = snprintf(NULL, 0, "private chat from %s(%d): %s", msg.name, msg.UID, msg.buf);
+                            snprintf(buf_temp, len + 1, "private chat from %s(%d): %s", msg.name, msg.UID, msg.buf);
+
+                            for (int j = 1; j <= user_counter; ++j)
+                            {
+                                if (user[fds[j].fd].UID == msg.FID)
+                                {
+                                    if (user[fds[j].fd].opcode != Private_Chat)
+                                    {
+
+                                        len = snprintf(NULL, 0, "Received a private message from %s(%d): %s", msg.name, msg.UID, msg.buf);
+                                        snprintf(buf_temp, len + 1, "Received a private message from %s(%d): %s", msg.name, msg.UID, msg.buf);
+                                    }
+
+                                    fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
+                                    fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
+                                    strcpy(user[fds[j].fd].buf, buf_temp);
+                                    break;
+                                }
+                            }
+                        }
+                        else if (msg.opcode == Add_Friend)
+                        {
+
+                            len = snprintf(NULL, 0, "Verified by a friend from %s(%d)", msg.name, msg.UID);
+                            snprintf(buf_temp, len + 1, "Verified by a friend from %s(%d)", msg.name, msg.UID);
+
+                            for (int j = 1; j <= user_counter; ++j)
+                            {
+                                if (user[fds[j].fd].UID == msg.FID)
+                                {
+                                    fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
+                                    fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
+                                    strcpy(user[fds[j].fd].buf, buf_temp);
+
+                                    user[fds[j].fd].opcode = Add_Friend;
+                                    user[fds[j].fd].FID = msg.FID;
+
+                                    cout << "message: " << user[fds[j].fd].opcode << "  " << user[fds[j].fd].UID << "  " << user[fds[j].fd].FID << endl;
+                                    break;
+                                }
+                            }
                         }
                         else
                         {
-                            int len;
-                            if (msg.opcode == Public_Chat)
+                            if (msg.opcode == LOGIN) // 登陆，存储用户的UID和name
                             {
+                                user[connfd].UID = msg.UID;
+                                strcpy(user[connfd].name, msg.name);
+                                user[connfd].opcode = msg.opcode;
+
+                                len = snprintf(NULL, 0, "----%s(%d)上线----", msg.name, msg.UID);
+                                snprintf(buf_temp, len + 1, "----%s(%d)上线----", msg.name, msg.UID);
+                            }
+                            else if (msg.opcode == Public_Chat)
+                            {
+
                                 len = snprintf(NULL, 0, "public chat from %s(%d): %s", msg.name, msg.UID, msg.buf);
                                 snprintf(buf_temp, len + 1, "public chat from %s(%d): %s", msg.name, msg.UID, msg.buf);
                             }
-                            else if (msg.opcode == Private_Chat)
+                            for (int j = 1; j <= user_counter; ++j)
                             {
-                                len = snprintf(NULL, 0, "private chat from %s(%d): %s", msg.name, msg.UID, msg.buf);
-                                snprintf(buf_temp, len + 1, "private chat from %s(%d): %s", msg.name, msg.UID, msg.buf);
+                                if (fds[j].fd == connfd || user[fds[j].fd].opcode != Public_Chat) // 当前的和不再个群聊的连接socket不处理
+                                {
+                                    continue;
+                                }
+                                fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
+                                fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
+                                strcpy(user[fds[j].fd].buf, buf_temp);
                             }
                         }
-
                         cout << "send data: " << buf_temp << endl;
-
-                        for (int j = 1; j <= user_counter; ++j)
-                        {
-                            if (fds[j].fd == connfd || user[fds[j].fd].opcode != Public_Chat) // 当前的连接socket不处理
-                            {
-                                continue;
-                            }
-                            fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
-                            fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
-                            strcpy(user[fds[j].fd].buf, buf_temp);
-                        }
                     }
                 }
             }
