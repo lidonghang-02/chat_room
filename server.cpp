@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-10-24 10:03:02
  * @author: lidonghang-02 2426971102@qq.com
- * @LastEditTime: 2023-10-30 17:53:17
+ * @LastEditTime: 2023-11-01 10:28:23
  */
 #include <iostream>
 #include <netinet/in.h>
@@ -183,28 +183,47 @@ int main(int argc, char *argv[])
                                 }
                             }
                         }
-                        else if (msg.opcode == Add_Friend)
+                        /*
+                        else if (msg.opcode == Add_Friend) // 转发验证消息和响应结果
                         {
-
-                            len = snprintf(NULL, 0, "Verified by a friend from %s(%d)", msg.name, msg.UID);
-                            snprintf(buf_temp, len + 1, "Verified by a friend from %s(%d)", msg.name, msg.UID);
-
-                            for (int j = 1; j <= user_counter; ++j)
+                            if (strcmp(msg.buf, "agree") == 0 || strcmp(msg.buf, "reject") == 0)
                             {
-                                if (user[fds[j].fd].UID == msg.FID)
+                                for (int j = 1; j <= user_counter; ++j)
                                 {
-                                    fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
-                                    fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
-                                    strcpy(user[fds[j].fd].buf, buf_temp);
+                                    if (user[fds[j].fd].UID == msg.FID)
+                                    {
+                                        ret = send(fds[j].fd, &msg, sizeof(msg), 0);
+                                        if (ret == -1)
+                                        {
+                                            cout << "gg" << endl;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
 
-                                    user[fds[j].fd].opcode = Add_Friend;
-                                    user[fds[j].fd].FID = msg.FID;
+                                len = snprintf(NULL, 0, "Verified by a friend from %s(%d)", msg.name, msg.UID);
+                                snprintf(buf_temp, len + 1, "Verified by a friend from %s(%d)", msg.name, msg.UID);
 
-                                    cout << "message: " << user[fds[j].fd].opcode << "  " << user[fds[j].fd].UID << "  " << user[fds[j].fd].FID << endl;
-                                    break;
+                                for (int j = 1; j <= user_counter; ++j)
+                                {
+                                    if (user[fds[j].fd].UID == msg.FID)
+                                    {
+                                        fds[j].events |= ~POLLIN; // 移除POLLIN（可读）事件
+                                        fds[j].events |= POLLOUT; // 添加POLLOUT（可写）事件
+                                        strcpy(user[fds[j].fd].buf, buf_temp);
+
+                                        user[fds[j].fd].opcode = Add_Friend;
+                                        user[fds[j].fd].FID = msg.FID;
+
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        */
                         else
                         {
                             if (msg.opcode == LOGIN) // 登陆，存储用户的UID和name
