@@ -1,7 +1,7 @@
 /*
  * @Date: 2023-10-22 13:17:39
  * @author: lidonghang-02 2426971102@qq.com
- * @LastEditTime: 2023-10-30 17:50:38
+ * @LastEditTime: 2023-11-01 10:30:58
  */
 #include <iostream>
 #include <fcntl.h>
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 		// exit(1);
 	}
 stp1:
-	cout << "1.登陆	2.注册" << endl;
+	cout << "1.login	2.sign up" << endl;
 	cin >> opt;
 	getchar();
 	switch (opt)
@@ -80,9 +80,9 @@ stp1:
 	}
 
 stp2:
-	cout << "----------------------------" << endl;
-	cout << "1.添加好友 2.群聊 3.私聊 4.退出" << endl;
-	cout << "----------------------------" << endl;
+	cout << "------------------------------------------------------" << endl;
+	cout << "1.add friend   2.public chat   3.private chat   4.quit" << endl;
+	cout << "------------------------------------------------------" << endl;
 
 	cin >> opt;
 	getchar();
@@ -102,24 +102,37 @@ stp2:
 			cout << "user[" << FID << "] does not exist" << endl;
 			goto stp2;
 		}
-		MSG msg;
-		msg.UID = UID;
-		msg.FID = FID;
-		msg.opcode = Add_Friend;
-		strcpy(msg.name, username);
-		if (send(sockfd, &msg, sizeof(msg), 0) == -1)
+		// MSG msg;
+		// msg.UID = UID;
+		// msg.FID = FID;
+		// msg.opcode = Add_Friend;
+		// strcpy(msg.name, username);
+		// if (send(sockfd, &msg, sizeof(msg), 0) == -1)
+		// {
+		// 	printf("send Friend verification error\n");
+		// }
+		// printf("Wait for user(%d) consent...\n", FID);
+		// recv(sockfd, &msg, sizeof(msg), MSG_WAITALL);
+		// if (strcmp(msg.buf, "agree") == 0)
+		// {
+		if (add_friend(UID, FID) == -1)
 		{
-			printf("send Friend verification error\n");
+			cout << "Failed to add friend" << endl;
 		}
-
-		if (add_friend(UID, FID) != -1)
-		{
-		}
+		// }
+		// else if (strcmp(msg.buf, "reject") == 0)
+		// {
+		// 	cout << "The other party rejected your friend application" << endl;
+		// }
 		goto stp2;
 
 		break;
 	case 2:
-		printf("------public chat------\n");
+		printf("-------------------------------\n");
+		printf("----------public chat----------\n");
+		printf("------ Type quit to exit ------\n");
+		printf("-------------------------------\n");
+
 		chat(sockfd, Public_Chat, username, 0);
 		goto stp2;
 		break;
@@ -141,7 +154,11 @@ stp2:
 			cout << "Your friend is not online" << endl;
 			goto stp2;
 		}
+		printf("--------------------------------\n");
 		printf("------private chat with %d------\n", FID);
+		printf("------ Type quit to exit -------\n");
+		printf("--------------------------------\n");
+
 		chat(sockfd, Private_Chat, username, FID);
 		goto stp2;
 		break;
@@ -231,18 +248,38 @@ void chat(int sockfd, int opcode, char *name, int FID)
 			memset(msg_recv.buf, '\0', BUFFER_SIZE);
 			recv(fds[1].fd, &msg_recv, sizeof(msg_recv), 0);
 			cout << msg_recv.buf << endl;
+			/*
+			// 响应验证消息
 			if (msg_recv.opcode == Add_Friend)
 			{
+				MSG msg;
+				msg.UID = UID;
+				msg.FID = msg_recv.FID;
+				strcpy(msg.name, name);
+
 				int opt;
-				cout << "1.同意		2.拒绝" << endl;
+				cout << "1.agree		2.reject" << endl;
 				while (cin >> opt)
 				{
 					if (opt == 1)
 					{
+						strcpy(msg.buf, "agree");
 						break;
 					}
+					else if (opt == 2)
+					{
+						strcpy(msg.buf, "reject");
+						break;
+					}
+					else
+						printf("Please enter the correct opcode\n");
+				}
+				if (send(sockfd, &msg, sizeof(msg), 0) == -1)
+				{
+					printf("Failed to send verification message\n");
 				}
 			}
+			*/
 		}
 
 		if (fds[0].revents & POLLIN)
