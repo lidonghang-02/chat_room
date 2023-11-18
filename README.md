@@ -35,6 +35,14 @@ sudo apt install sqlite3 libsqlite3-dev
 .help           查看帮助信息
 .databases      查看数据库
 ```
+
+## 运行本项目
+```
+make
+./server <ip> <port>
+./client <ip> <port>
+```
+
 ## 功能
 - [x] 注册
 - [x] 群聊
