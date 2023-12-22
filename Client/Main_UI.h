@@ -1,21 +1,12 @@
 /*
- * @Date: 2023-11-06 20:08:02
+ * @Date: 2023-12-13 14:20:30
  * @author: lidonghang-02 2426971102@qq.com
- * @LastEditTime: 2023-12-04 14:42:40
+ * @LastEditTime: 2023-12-14 17:08:02
  */
 #ifndef Main_UI_H
 #define Main_UI_H
 
-struct msg
-{
-    int send_id;
-    char name[16];
-    char sned_time[32];
-    char text[128];
-    struct msg *next;
-} Apply, private_chat, group_chat;
-
 void Main_UI();
-int Main_select(int sockfd, int uid, char *buf, int status);
+int Main_select(int sockfd, char *buf, char *username, char *target);
 
 #endif /* Main_UI_H */

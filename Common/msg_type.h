@@ -12,6 +12,7 @@
 
 // 当前client状态
 #define MAIN_UI 1
+#define REPLY_ADD_FRIEND 2
 
 struct msg
 {

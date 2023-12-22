@@ -1,8 +1,5 @@
 # 网络聊天室
 
-> **尚未完成，临时版本**
-
-
 ## 目录结构
 
 ## sqlite数据库
@@ -35,7 +32,7 @@ sudo apt install sqlite3 libsqlite3-dev
 1. 用户表（User）：
    - id: 用户ID (主键)
    - username: 用户名
-   - password: 密码（加密存储）
+   - password: 密码
    - email: 电子邮件地址
    - status: 在线状态
    - personal_profile: 个人简介
@@ -44,29 +41,37 @@ sudo apt install sqlite3 libsqlite3-dev
 
 2. 好友关系表（Friendship）：
    - id: 关系ID (主键)
-   - user_id: 用户ID (外键，关联到User表)
-   - friend_id: 好友ID (外键，关联到User表)
+   - user_name：用户名 (外键，关联到User表)
+   - friend_name：好友用户名 (外键，关联到User表)
    - created_at: 创建时间
 
-3. 群组表（Group）：
+3. 群组表（ChatGroup）：
    - id: 群组ID (主键)
    - name: 群组名称
-   - creator_id: 创建者ID (外键，关联到User表)
+   - creator_name: 创建者用户名 (外键，关联到User表)
    - announcement: 群组公告
-   - created_at: 创建时间
-   - updated_at: 更新时间
+   - created_at: 群聊创建时间
+   - updated_at: 公告更新时间
 
 4. 群组成员表（GroupMember）：
-   - id: 成员ID (主键)
-   - group_id: 群组ID (外键，关联到Group表)
-   - user_id: 用户ID (外键，关联到User表)
+   - id: ID(主键)
+   - group_name: 群组名称 (外键，关联到Group表)
+   - user_name: 用户名 (外键，关联到User表)
+   - permissions：权限等级
    - created_at: 加入时间
-   - updated_at: 更新时间
 
 5. 消息表（Message）：
    - id: 消息ID (主键)
-   - sender_id: 发送者ID (外键，关联到User表)
-   - recipient_id: 接收者ID (外键，关联到User表或Group表)
+   - sender_name: 发送者用户名 (外键，关联到User表)
+   - received_type: 接受者类型（群或个人）
+   - receiver_name: 接收者名称
+   - content: 消息内容
+   - sent_at: 发送时间
+6. 申请信息表（Application）
+   - id：信息ID（主键）
+   - sender_name: 发送者用户名 (外键，关联到User表)
+   - msg_type: 申请类型（群聊或好友申请）
+   - receiver_name: 接收者名称
    - content: 消息内容
    - sent_at: 发送时间
 
